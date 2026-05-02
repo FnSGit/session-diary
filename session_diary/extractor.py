@@ -175,3 +175,98 @@ def generate_current_entry(diary_path: Path, timestamp: str) -> str:
         return f"### {timestamp} {task_title}\n- **成果：** {outcomes}\n- **决策：** {decisions}"
     except Exception:
         return f"### {timestamp} Session Diary\n- **成果：** （待补充）\n- **决策：** （待补充）"
+
+
+def remove_summary_metadata(summary: str) -> str:
+    """Remove header and separator from summary
+
+    Args:
+        summary: Full summary section
+
+    Returns:
+        Content without header line and --- separator
+    """
+    lines = summary.split("\n")
+
+    # Remove first line (header)
+    if lines and lines[0].startswith("## 历史任务摘要"):
+        lines = lines[1:]
+
+    # Remove --- separator
+    lines = [line for line in lines if line.strip() != "---"]
+
+    return "\n".join(lines).strip()
+
+
+def extract_summary_entries(summary: str) -> list:
+    """Extract individual entries from summary
+
+    Args:
+        summary: Full summary section
+
+    Returns:
+        List of entry strings (each starts with "### ")
+    """
+    entries = []
+    current_entry = []
+
+    for line in summary.split("\n"):
+        if line.startswith("### "):
+            if current_entry:
+                entries.append("\n".join(current_entry))
+            current_entry = [line]
+        else:
+            if current_entry:
+                current_entry.append(line)
+
+    if current_entry:
+        entries.append("\n".join(current_entry))
+
+    return entries
+
+
+def rebuild_summary(entries: list) -> str:
+    """Rebuild summary from entries list
+
+    Args:
+        entries: List of entry strings
+
+    Returns:
+        Full summary section with header and separator
+    """
+    content = "\n\n".join(entries)
+    return f"## 历史任务摘要（截止本次会话）\n\n{content}\n\n---"
+
+
+def accumulate_and_trim_summary(old_summary: str, new_entry: str) -> str:
+    """Accumulate and trim summary entries (size control: 30KB)
+
+    Args:
+        old_summary: Full summary section content
+        new_entry: New entry to prepend
+
+    Returns:
+        Combined summary with size control (max 30KB, trim oldest entries if exceeded)
+    """
+    from .config import MAX_SUMMARY_SIZE, MAX_SUMMARY_ENTRIES
+
+    # Remove header and separator from old content
+    old_content = remove_summary_metadata(old_summary)
+
+    # Build new summary: header + new_entry + old_content + separator
+    if old_content:
+        new_summary = f"## 历史任务摘要（截止本次会话）\n\n{new_entry}\n\n{old_content}\n\n---"
+    else:
+        new_summary = f"## 历史任务摘要（截止本次会话）\n\n{new_entry}\n\n---"
+
+    # Check size (30KB = 30720 bytes)
+    if len(new_summary.encode('utf-8')) > MAX_SUMMARY_SIZE:
+        # Extract entries
+        entries = extract_summary_entries(new_summary)
+
+        if len(entries) > MAX_SUMMARY_ENTRIES:
+            # Keep new entry (first) + 5 newest old entries (last 5)
+            trimmed_entries = [entries[0]] + entries[-(MAX_SUMMARY_ENTRIES - 1):]
+            new_summary = rebuild_summary(trimmed_entries)
+
+    return new_summary
