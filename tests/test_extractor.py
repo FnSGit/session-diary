@@ -1,4 +1,4 @@
-from session_diary.extractor import extract_summary_section
+from session_diary.extractor import extract_summary_section, generate_current_entry
 
 
 def test_extract_summary_section_new_format(sample_diary_new_format):
@@ -36,3 +36,34 @@ def test_extract_summary_section_nonexistent_file():
     result = extract_summary_section(nonexistent)
 
     assert result == ""
+
+
+def test_generate_current_entry_basic(sample_diary_new_format):
+    """Test basic current entry generation"""
+    result = generate_current_entry(sample_diary_new_format, "2026-05-02 20:00")
+
+    assert "### 2026-05-02 20:00" in result
+    assert "**成果：**" in result
+    assert "**决策：**" in result
+    # Should extract task title from first ### in "## 本次进展"
+    assert "Sample Task Implementation" in result
+
+
+def test_generate_current_entry_empty_diary():
+    """Test generation when diary is empty"""
+    from pathlib import Path
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        f.write("# Empty Diary\n")
+        f.flush()
+        empty_diary = Path(f.name)
+
+    result = generate_current_entry(empty_diary, "2026-05-02 21:00")
+
+    # Should handle gracefully with placeholders
+    assert "### 2026-05-02 21:00" in result
+    assert "**成果：** （待补充）" in result
+    assert "**决策：** （待补充）" in result
+
+    empty_diary.unlink()
