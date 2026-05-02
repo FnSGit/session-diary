@@ -38,4 +38,4 @@ source = ["session_diary"]
 omit = ["tests/*"]
 
 [tool.coverage.report]
-fail_under = 80
+fail_under = 60

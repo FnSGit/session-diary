@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+.coverage
+*.egg-info/
+dist/
+build/
+.session-memory/
+uv.lock
