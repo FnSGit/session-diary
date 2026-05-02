@@ -1,0 +1,41 @@
+[project]
+name = "session-diary-plugin"
+version = "1.0.0"
+description = "Lightweight session diary hooks for Claude Code - zero dependencies, zero vector DB"
+authors = [{name = "Feng Shuai", email = "your.email@example.com"}]
+license = {text = "MIT"}
+requires-python = ">=3.8"
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+session-diary-save-hook = "session_diary.save_hook:main"
+session-diary-sessionstart-hook = "session_diary.sessionstart_hook:main"
+session-diary-install = "session_diary.installer:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["session_diary"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --cov=session_diary --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["session_diary"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+fail_under = 80
