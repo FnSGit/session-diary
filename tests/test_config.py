@@ -6,8 +6,8 @@ from session_diary import config
 
 
 def test_default_save_interval():
-    """Test default SAVE_INTERVAL is 15"""
-    assert config.SAVE_INTERVAL == 15
+    """Test default SAVE_INTERVAL is 30"""
+    assert config.SAVE_INTERVAL == 30
 
 
 def test_default_state_dir():

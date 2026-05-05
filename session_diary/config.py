@@ -165,11 +165,11 @@ def _find_project_root() -> Path:
     return cwd
 
 
-# Save interval: every N human messages
-SAVE_INTERVAL = int(os.getenv('SESSION_DIARY_SAVE_INTERVAL', '15'))
+# Save interval: every N human messages (default: 30, reduced frequency)
+SAVE_INTERVAL = int(os.getenv('SESSION_DIARY_SAVE_INTERVAL', '30'))
 
-# Minimum time interval between saves (minutes)
-MIN_SAVE_INTERVAL_MINUTES = int(os.getenv('SESSION_DIARY_MIN_INTERVAL', '30'))
+# Minimum time interval between saves (minutes, default: 60)
+MIN_SAVE_INTERVAL_MINUTES = int(os.getenv('SESSION_DIARY_MIN_INTERVAL', '60'))
 
 # State directory (hook state files, logs)
 STATE_DIR = Path(os.getenv('SESSION_DIARY_STATE_DIR', '~/.session-diary/hook_state')).expanduser()
