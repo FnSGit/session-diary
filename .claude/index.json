@@ -1,0 +1,207 @@
+{
+  "timestamp": "2026-05-05T11:05:34+0800",
+  "project_name": "session-diary-plugin",
+  "project_description": "Claude Code Stop/SessionStart hook 插件，自动保存会话日记到项目本地目录，支持 settings.local.json 配置自定义 diary 目录",
+  "scan_summary": {
+    "total_files_estimated": 15,
+    "files_scanned": 15,
+    "coverage_percentage": 100,
+    "scan_duration": "fast",
+    "truncated": false
+  },
+  "modules": [
+    {
+      "path": "session_diary/",
+      "name": "session_diary",
+      "language": "Python",
+      "description": "核心插件包，提供 Stop Hook、SessionStart Hook 和安装配置工具",
+      "entry_files": [
+        "save_hook.py:main",
+        "sessionstart_hook.py:main",
+        "installer.py:main"
+      ],
+      "interfaces": [
+        "save_hook.main() - Stop Hook 入口",
+        "sessionstart_hook.main() - SessionStart Hook 入口",
+        "installer.main() - 安装配置工具",
+        "extractor.extract_summary_section() - 提取历史摘要",
+        "extractor.generate_current_entry() - 生成当前条目",
+        "extractor.accumulate_and_trim_summary() - 增量累积",
+        "counter.count_human_messages() - 消息计数",
+        "state.HookState - Hook 状态管理"
+      ],
+      "dependencies": {
+        "external": [
+          "json (标准库)",
+          "sys (标准库)",
+          "pathlib (标准库)",
+          "datetime (标准库)",
+          "os (标准库)"
+        ],
+        "internal": [
+          "save_hook → counter, extractor, state, config",
+          "sessionstart_hook → extractor, state, config",
+          "installer → (无内部依赖)"
+        ]
+      },
+      "test_coverage": {
+        "has_tests": true,
+        "test_files": [
+          "test_save_hook.py",
+          "test_sessionstart_hook.py",
+          "test_extractor.py",
+          "test_state.py",
+          "test_config.py",
+          "test_installer.py"
+        ],
+        "coverage_percentage": "> 80%"
+      },
+      "important_files": [
+        "save_hook.py (200 行) - Stop Hook 主逻辑",
+        "sessionstart_hook.py (184 行) - SessionStart Hook 主逻辑",
+        "extractor.py (273 行) - 摘要提取与生成",
+        "config.py (200 行) - 配置管理与路径解析",
+        "state.py (104 行) - Hook 状态持久化",
+        "counter.py (45 行) - JSONL 消息计数",
+        "installer.py (169 行) - 自动配置工具",
+        "__init__.py (8 行) - 包元数据"
+      ],
+      "data_models": [
+        ".session-diary-YYYY-MM-DD-HHMM.md - 会话日记文件",
+        "~/.session-diary/hook_state/<session_id>_state.json - Hook 状态",
+        "~/.session-diary/hook_state/hook.log - Hook 日志",
+        "~/.session-diary/hook_state/last_diary_dir.txt - 全局日记目录"
+      ]
+    },
+    {
+      "path": "tests/",
+      "name": "tests",
+      "language": "Python",
+      "description": "单元测试套件，提供完整测试覆盖",
+      "entry_files": [
+        "conftest.py - 测试夹具"
+      ],
+      "interfaces": [
+        "conftest.py - 共享测试夹具（sample_transcript, sample_diary_* 等）"
+      ],
+      "dependencies": {
+        "external": [
+          "pytest >= 7.0",
+          "pytest-cov >= 4.0"
+        ],
+        "internal": []
+      },
+      "test_coverage": {
+        "has_tests": false,
+        "test_files": [],
+        "coverage_percentage": "N/A"
+      },
+      "important_files": [
+        "conftest.py (304 行) - 测试夹具定义",
+        "test_save_hook.py (200 行) - Stop Hook 测试",
+        "test_sessionstart_hook.py (247 行) - SessionStart Hook 测试",
+        "test_extractor.py (185 行) - 摘要提取测试",
+        "test_state.py (105 行) - 状态管理测试",
+        "test_config.py (211 行) - 配置管理测试",
+        "test_installer.py (196 行) - 安装工具测试"
+      ],
+      "data_models": []
+    }
+  ],
+  "root_files": {
+    "pyproject.toml": {
+      "type": "config",
+      "description": "项目配置与依赖管理",
+      "language": "TOML"
+    },
+    "README.md": {
+      "type": "doc",
+      "description": "项目说明文档",
+      "language": "Markdown"
+    },
+    ".gitignore": {
+      "type": "config",
+      "description": "Git 忽略规则",
+      "language": "Git"
+    },
+    "CLAUDE.md": {
+      "type": "doc",
+      "description": "AI 上下文文档（根级）",
+      "language": "Markdown"
+    }
+  },
+  "ignored_patterns": [
+    "__pycache__/",
+    "*.pyc",
+    "*.pyo",
+    ".venv/",
+    ".pytest_cache/",
+    ".coverage",
+    "*.egg-info/",
+    "dist/",
+    "build/",
+    ".session-memory/",
+    "uv.lock"
+  ],
+  "ignored_stats": {
+    "directories": 8,
+    "files": 0,
+    "reason": "匹配 .gitignore 规则"
+  },
+  "coverage_report": {
+    "source_files": {
+      "total": 8,
+      "scanned": 8,
+      "percentage": 100,
+      "files": [
+        "session_diary/__init__.py",
+        "session_diary/config.py",
+        "session_diary/counter.py",
+        "session_diary/extractor.py",
+        "session_diary/installer.py",
+        "session_diary/save_hook.py",
+        "session_diary/sessionstart_hook.py",
+        "session_diary/state.py"
+      ]
+    },
+    "test_files": {
+      "total": 7,
+      "scanned": 7,
+      "percentage": 100,
+      "files": [
+        "tests/conftest.py",
+        "tests/test_config.py",
+        "tests/test_extractor.py",
+        "tests/test_installer.py",
+        "tests/test_save_hook.py",
+        "tests/test_sessionstart_hook.py",
+        "tests/test_state.py"
+      ]
+    },
+    "config_files": {
+      "total": 3,
+      "scanned": 3,
+      "percentage": 100,
+      "files": [
+        "pyproject.toml",
+        "README.md",
+        ".gitignore"
+      ]
+    },
+    "gaps": []
+  },
+  "next_steps": [],
+  "architecture_insights": {
+    "design_philosophy": "零依赖、轻量级、向后兼容",
+    "key_features": [
+      "双重触发条件（消息数 + 时间间隔）智能节流",
+      "增量摘要累积与自动裁剪（30KB 限制）",
+      "向后兼容新旧 diary 格式",
+      "多种项目根定位策略",
+      "优雅降级错误处理"
+    ],
+    "data_flow": "Claude Code Hook → stdin JSON → 处理逻辑 → stdout 输出 → Markdown 存储",
+    "state_management": "JSON 文件持久化 + 遗留格式迁移",
+    "testing_strategy": "单元测试 + 集成测试 + 边缘情况覆盖，目标覆盖率 >= 80%"
+  }
+}
