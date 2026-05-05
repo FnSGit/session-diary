@@ -2,6 +2,7 @@
 from pathlib import Path
 from .extractor import extract_summary_section
 from .config import DIARY_DIR
+from .state import load_diary_dir
 
 
 def find_latest_diary(diary_dir: Path) -> Path | None:
@@ -161,7 +162,12 @@ def format_entries(entries: list) -> str:
 
 def main():
     """SessionStart hook main entry point"""
-    diary_dir = DIARY_DIR
+    # Try to load diary_dir from global state (set by Stop hook)
+    diary_dir = load_diary_dir()
+
+    # Fallback to config.DIARY_DIR if not found
+    if diary_dir is None:
+        diary_dir = DIARY_DIR
 
     latest_diary = find_latest_diary(diary_dir)
 

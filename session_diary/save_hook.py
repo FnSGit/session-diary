@@ -1,12 +1,12 @@
-"""Stop hook main logic - triggers diary saves every N messages"""
+"""Stop hook main logic - triggers diary saves every N messages with time interval"""
 import json
 import sys
 from pathlib import Path
 from datetime import datetime
 from .counter import count_human_messages
 from .extractor import extract_summary_section, generate_current_entry, accumulate_and_trim_summary
-from .state import HookState
-from .config import SAVE_INTERVAL, DIARY_DIR, VERBOSE_MODE
+from .state import HookState, save_diary_dir
+from .config import SAVE_INTERVAL, DIARY_DIR, VERBOSE_MODE, MIN_SAVE_INTERVAL_MINUTES
 
 
 def read_stdin_json() -> dict:
@@ -27,21 +27,22 @@ def output_empty():
     print("{}")
 
 
-def output_block_with_summary(summary: str):
-    """Output block decision with summary
+def output_block_with_agent_trigger(transcript_path: Path, diary_dir: Path):
+    """Output block decision with /save-session-auto trigger
 
     Args:
-        summary: Pending summary to inject
+        transcript_path: Path to transcript.json
+        diary_dir: Path to diary directory
     """
-    # Escape newlines for JSON
-    summary_escaped = summary.replace("\n", "\\n")
+    # Create diary dir if not exists (Agent may need it)
+    diary_dir.mkdir(parents=True, exist_ok=True)
 
-    block_json = {
+    # Format: explicit slash command that Claude will recognize
+    trigger_json = {
         "decision": "block",
-        "reason": f"MemPalace save checkpoint. Write a brief session diary entry covering key topics, decisions, and code changes. Start with:\n\n{summary_escaped}\n\nContinue after saving."
+        "reason": f"请执行 /save-session-auto 启动后台 Agent 总结会话。\n\ntranscript_path={transcript_path}\ndiary_dir={diary_dir}"
     }
-
-    print(json.dumps(block_json))
+    print(json.dumps(trigger_json))
 
 
 def is_verbose_mode() -> bool:
@@ -70,8 +71,31 @@ def find_latest_diary(diary_dir: Path) -> Path | None:
     return files[0] if files else None
 
 
+def write_diary_file(diary_dir: Path, summary: str) -> Path:
+    """Write a diary markdown file to diary_dir
+
+    Args:
+        diary_dir: Diary directory (will be created if not exists)
+        summary: Summary content to write
+
+    Returns:
+        Path to the written diary file
+    """
+    diary_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+    time_short = datetime.now().strftime('%H%M')
+    filename = f".session-diary-{timestamp[:10]}-{time_short}.md"
+    diary_path = diary_dir / filename
+
+    content = f"# Session Diary - {timestamp}\n\n{summary}\n"
+    diary_path.write_text(content, encoding='utf-8')
+
+    return diary_path
+
+
 def process_summary(diary_dir: Path, session_id: str) -> str:
-    """Extract old summary, generate new entry, accumulate with trim
+    """Extract old summary, generate new entry, accumulate with trim, write diary
 
     Args:
         diary_dir: Diary directory
@@ -106,6 +130,9 @@ def process_summary(diary_dir: Path, session_id: str) -> str:
     pending_file = state_dir / f"{session_id}_pending_summary.txt"
     pending_file.write_text(new_summary)
 
+    # Write diary file directly (no AI needed)
+    write_diary_file(diary_dir, new_summary)
+
     return new_summary
 
 
@@ -133,31 +160,40 @@ def main():
     else:
         exchange_count = 0
 
-    # Check if time to save
+    # Check if time to save (dual conditions: message count + time interval)
     state = HookState(session_id)
     since_last = exchange_count - state.last_save
 
+    # Message count condition
+    message_condition = since_last >= SAVE_INTERVAL and exchange_count > 0
+
+    # Time interval condition
+    time_condition = True  # Default: allow if no previous timestamp
+    if state.last_save_timestamp:
+        try:
+            last_time = datetime.fromisoformat(state.last_save_timestamp)
+            minutes_since_last = (datetime.now() - last_time).total_seconds() / 60
+            time_condition = minutes_since_last >= MIN_SAVE_INTERVAL_MINUTES
+        except Exception:
+            pass  # Invalid timestamp format, allow save
+
     # Log for debugging
     state.log(f"Session {session_id}: {exchange_count} exchanges, {since_last} since last save")
+    state.log(f"Conditions: message={message_condition}, time={time_condition}")
 
-    if since_last >= SAVE_INTERVAL and exchange_count > 0:
-        # Update last save point
+    if message_condition and time_condition:
+        # Update last save point and timestamp
         state.last_save = exchange_count
+        state.last_save_timestamp = datetime.now().isoformat()
         state.save()
+
+        # Save diary_dir to global state for SessionStart hook
+        save_diary_dir(DIARY_DIR)
 
         state.log(f"TRIGGERING SAVE at exchange {exchange_count}")
 
-        # Extract and accumulate summary
-        summary = process_summary(DIARY_DIR, session_id)
-
-        state.log(f"Generated summary, size: {len(summary.encode('utf-8'))} bytes")
-
-        # Output block decision (or empty for silent mode)
-        if is_verbose_mode():
-            output_block_with_summary(summary)
-        else:
-            # Silent mode: return empty JSON
-            output_empty()
+        # Output block decision with /save-session-auto trigger
+        output_block_with_agent_trigger(transcript_path, DIARY_DIR)
     else:
         # Not time to save
         output_empty()
