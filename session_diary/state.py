@@ -57,6 +57,11 @@ class HookState:
         self.last_save = state.get("last_save_count", 0)
         self.last_save_timestamp = state.get("last_save_timestamp")
 
+        # File tracking for incremental read
+        self.last_file_position = state.get("last_file_position", 0)
+        self.last_file_size = state.get("last_file_size", 0)
+        self.last_file_mtime = state.get("last_file_mtime")
+
     def _read_state(self) -> dict:
         """Read state from JSON file, with legacy format fallback"""
         # Try new JSON format first
@@ -74,18 +79,30 @@ class HookState:
                 if content.isdigit():
                     return {
                         "last_save_count": int(content),
-                        "last_save_timestamp": None  # Unknown timestamp
+                        "last_save_timestamp": None,  # Unknown timestamp
+                        "last_file_position": 0,
+                        "last_file_size": 0,
+                        "last_file_mtime": None
                     }
             except Exception:
                 pass
 
-        return {"last_save_count": 0, "last_save_timestamp": None}
+        return {
+            "last_save_count": 0,
+            "last_save_timestamp": None,
+            "last_file_position": 0,
+            "last_file_size": 0,
+            "last_file_mtime": None
+        }
 
     def save(self):
         """Save current state to JSON file"""
         state = {
             "last_save_count": self.last_save,
-            "last_save_timestamp": self.last_save_timestamp or datetime.now().isoformat()
+            "last_save_timestamp": self.last_save_timestamp or datetime.now().isoformat(),
+            "last_file_position": self.last_file_position,
+            "last_file_size": self.last_file_size,
+            "last_file_mtime": self.last_file_mtime
         }
         self.state_file.write_text(json.dumps(state, indent=2))
 

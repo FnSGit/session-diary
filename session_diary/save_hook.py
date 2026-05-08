@@ -3,7 +3,7 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime
-from .counter import count_human_messages
+from .counter import count_human_messages, count_human_messages_incremental
 from .extractor import extract_summary_section, generate_current_entry, accumulate_and_trim_summary
 from .state import HookState, save_diary_dir
 from .config import SAVE_INTERVAL, DIARY_DIR, VERBOSE_MODE, MIN_SAVE_INTERVAL_MINUTES
@@ -154,14 +154,17 @@ def main():
         output_empty()
         return
 
-    # Count exchanges
+    # Load state for incremental read
+    state = HookState(session_id)
+
+    # Count exchanges using incremental read
     if transcript_path.exists():
-        exchange_count = count_human_messages(transcript_path)
+        exchange_count, new_bytes = count_human_messages_incremental(transcript_path, state)
     else:
         exchange_count = 0
+        new_bytes = 0
 
     # Check if time to save (dual conditions: message count + time interval)
-    state = HookState(session_id)
     since_last = exchange_count - state.last_save
 
     # Message count condition
@@ -178,7 +181,7 @@ def main():
             pass  # Invalid timestamp format, allow save
 
     # Log for debugging
-    state.log(f"Session {session_id}: {exchange_count} exchanges, {since_last} since last save")
+    state.log(f"Session {session_id}: {exchange_count} exchanges, {since_last} since last save, {new_bytes} new bytes")
     state.log(f"Conditions: message={message_condition}, time={time_condition}")
 
     if message_condition and time_condition:
@@ -195,5 +198,8 @@ def main():
         # Output block decision with /save-session-auto trigger
         output_block_with_agent_trigger(transcript_path, DIARY_DIR)
     else:
+        # Not time to save, but still update file tracking state
+        state.save()
+
         # Not time to save
         output_empty()
