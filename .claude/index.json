@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-05T11:05:34+0800",
+  "timestamp": "2026-05-07T12:36:00+0800",
   "project_name": "session-diary-plugin",
   "project_description": "Claude Code Stop/SessionStart hook 插件，自动保存会话日记到项目本地目录，支持 settings.local.json 配置自定义 diary 目录",
   "scan_summary": {
@@ -57,12 +57,12 @@
         "coverage_percentage": "> 80%"
       },
       "important_files": [
-        "save_hook.py (200 行) - Stop Hook 主逻辑",
+        "save_hook.py (206 行) - Stop Hook 主逻辑",
         "sessionstart_hook.py (184 行) - SessionStart Hook 主逻辑",
         "extractor.py (273 行) - 摘要提取与生成",
         "config.py (200 行) - 配置管理与路径解析",
-        "state.py (104 行) - Hook 状态持久化",
-        "counter.py (45 行) - JSONL 消息计数",
+        "state.py (121 行) - Hook 状态持久化",
+        "counter.py (136 行) - JSONL 消息计数",
         "installer.py (169 行) - 自动配置工具",
         "__init__.py (8 行) - 包元数据"
       ],

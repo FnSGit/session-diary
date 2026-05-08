@@ -35,18 +35,18 @@ Claude Code Hook 机制
 graph TD
     A["session-diary-plugin (根)"] --> B["session_diary/"]
     A --> C["tests/"]
-    
+
     B --> D["核心模块"]
     D --> E["save_hook.py<br/>Stop Hook 主逻辑"]
     D --> F["sessionstart_hook.py<br/>SessionStart Hook 主逻辑"]
     D --> G["installer.py<br/>自动配置工具"]
-    
+
     B --> H["工具模块"]
     H --> I["counter.py<br/>消息计数"]
     H --> J["extractor.py<br/>摘要提取与生成"]
     H --> K["state.py<br/>状态管理"]
     H --> L["config.py<br/>配置管理"]
-    
+
     C --> M["测试套件"]
     M --> N["conftest.py<br/>测试夹具"]
     M --> O["test_*.py<br/>单元测试"]
@@ -126,8 +126,8 @@ session-diary-install
 
 ### 环境变量
 
-- `SESSION_DIARY_SAVE_INTERVAL=15` - 保存间隔（消息数，默认 15）
-- `SESSION_DIARY_MIN_INTERVAL=30` - 最小时间间隔（分钟，默认 30）
+- `SESSION_DIARY_SAVE_INTERVAL=30` - 保存间隔（消息数，默认 30）
+- `SESSION_DIARY_MIN_INTERVAL=60` - 最小时间间隔（分钟，默认 60）
 - `SESSION_DIARY_VERBOSE=false` - 详细模式（默认关闭）
 - `SESSION_DIARY_MEMORY_DIR=.session-memory` - 日记目录（默认 .session-memory）
 - `SESSION_DIARY_STATE_DIR=~/.session-diary/hook_state` - 状态目录
@@ -249,6 +249,16 @@ session-diary-install
    - 使用 pytest 运行测试
 
 ## 变更记录 (Changelog)
+
+### 2026-05-07 - 定期更新 AI 上下文
+
+- 执行阶段 A：全仓清点（100% 文件覆盖）
+- 执行阶段 B：模块优先扫描（8 源文件 + 7 测试文件）
+- 验证文档完整性：根级和模块级 CLAUDE.md 已存在
+- 更新 index.json 时间戳为 2026-05-07T12:36:00+0800
+- 更新配置默认值：SAVE_INTERVAL=30, MIN_INTERVAL=60
+- 覆盖率报告：100%（8/8 源文件 + 7/7 测试文件）
+- 扫描状态：完整覆盖，无需补捞
 
 ### 2026-05-05 - 初始化 AI 上下文
 
